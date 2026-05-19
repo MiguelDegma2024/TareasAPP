@@ -1,5 +1,6 @@
 package com.example.tareasapp
 
+import androidx.room.ColumnInfo
 import androidx.room.Entity
 import androidx.room.PrimaryKey
 
@@ -8,7 +9,9 @@ import androidx.room.PrimaryKey
 data class TaskEntity(
     @PrimaryKey(autoGenerate = true)
     val id: Int = 0,
-    val titulo: String,
-    val completado: Boolean = false,
-    val creado_en: Long = System.currentTimeMillis(),
+    val title: String,
+    @ColumnInfo(name = "is_completed")
+    val isCompleted: Boolean = false,
+    @ColumnInfo(name = "created_at")
+    val createdAt: Long = System.currentTimeMillis(),
 )
