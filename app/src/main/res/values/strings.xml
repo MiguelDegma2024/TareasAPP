@@ -10,4 +10,6 @@
     <string name="delete_dialog_message">¿Seguro que quieres eliminar esta tarea?</string>
     <string name="delete_confirm_button">Eliminar</string>
     <string name="delete_cancel_button">Cancelar</string>
+    <string name="search_placeholder">Buscar por título</string>
+    <string name="search_button_desc">Buscar</string>
 </resources>
