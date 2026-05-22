@@ -9,9 +9,15 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.ArrowDropDown
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
+import androidx.compose.material3.DropdownMenu
+import androidx.compose.material3.DropdownMenuItem
+import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
@@ -29,20 +35,28 @@ import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 
+private fun SortOrder.label(): String = when (this) {
+    SortOrder.NEWEST_FIRST -> "Más recientes primero"
+    SortOrder.OLDEST_FIRST -> "Más antiguas primero"
+    SortOrder.TITLE_A_Z    -> "Título A-Z"
+    SortOrder.TITLE_Z_A    -> "Título Z-A"
+}
+
 @Composable
 fun TasksScreen(
     viewModel: TaskViewModel = viewModel(
         factory = TaskViewModel.Factory
     )
 ) {
-    // Observa la lista de tareas del ViewModel.
     val tasks by viewModel.tasks.collectAsStateWithLifecycle()
-    // Estado local: texto del campo de nueva tarea.
-    var nuevaTareaTexto by remember { mutableStateOf("") }
-    // Estado para el diálogo de confirmación de eliminación.
-    var tareaAEliminar by remember { mutableStateOf<TaskEntity?>(null) }
+    val searchInput by viewModel.searchInput.collectAsStateWithLifecycle()
+    val sortOrder by viewModel.sortOrder.collectAsStateWithLifecycle()
 
-    // Diálogo de confirmación
+    var nuevaTareaTexto by remember { mutableStateOf("") }
+    var tareaAEliminar by remember { mutableStateOf<TaskEntity?>(null) }
+    var sortMenuExpanded by remember { mutableStateOf(false) }
+
+    // Diálogo de confirmación de eliminación
     tareaAEliminar?.let { tarea ->
         AlertDialog(
             onDismissRequest = { tareaAEliminar = null },
@@ -63,9 +77,7 @@ fun TasksScreen(
                 }
             },
             dismissButton = {
-                TextButton(
-                    onClick = { tareaAEliminar = null }
-                ) {
+                TextButton(onClick = { tareaAEliminar = null }) {
                     Text(text = stringResource(R.string.delete_cancel_button))
                 }
             }
@@ -79,12 +91,57 @@ fun TasksScreen(
                 .padding(paddingValues)
                 .padding(horizontal = 16.dp)
         ) {
-            // ----- Titulo -----
+            // ----- Título -----
             Text(
                 text = stringResource(R.string.app_title),
                 style = MaterialTheme.typography.headlineMedium,
                 modifier = Modifier.padding(vertical = 16.dp)
             )
+
+            // ----- Barra de búsqueda -----
+            SearchBar(
+                searchInput = searchInput,
+                onSearchInputChanged = { texto ->
+                    viewModel.onSearchInputChanged(texto)
+                },
+                onSearchClicked = {
+                    viewModel.executeSearch()
+                },
+                modifier = Modifier.padding(bottom = 8.dp)
+            )
+
+            // ----- Selector de orden -----
+            Box(modifier = Modifier.padding(bottom = 8.dp)) {
+                OutlinedButton(
+                    onClick = { sortMenuExpanded = true },
+                    modifier = Modifier.fillMaxWidth()
+                ) {
+                    Text(
+                        text = sortOrder.label(),
+                        modifier = Modifier.weight(1f)
+                    )
+                    Icon(
+                        imageVector = Icons.Default.ArrowDropDown,
+                        contentDescription = null
+                    )
+                }
+                DropdownMenu(
+                    expanded = sortMenuExpanded,
+                    onDismissRequest = { sortMenuExpanded = false },
+                    modifier = Modifier.fillMaxWidth()
+                ) {
+                    SortOrder.entries.forEach { order ->
+                        DropdownMenuItem(
+                            text = { Text(order.label()) },
+                            onClick = {
+                                viewModel.setSortOrder(order)
+                                sortMenuExpanded = false
+                            }
+                        )
+                    }
+                }
+            }
+
             // ----- Lista de tareas -----
             Box(modifier = Modifier.weight(1f)) {
                 if (tasks.isEmpty()) {
@@ -114,6 +171,7 @@ fun TasksScreen(
                     }
                 }
             }
+
             // ----- Campo para agregar nueva tarea -----
             Row(
                 modifier = Modifier
@@ -126,9 +184,7 @@ fun TasksScreen(
                     value = nuevaTareaTexto,
                     onValueChange = { nuevaTareaTexto = it },
                     placeholder = {
-                        Text(
-                            text = stringResource(R.string.new_task_placeholder)
-                        )
+                        Text(text = stringResource(R.string.new_task_placeholder))
                     },
                     modifier = Modifier.weight(1f)
                 )
