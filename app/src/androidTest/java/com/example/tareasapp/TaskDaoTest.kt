@@ -37,7 +37,7 @@ class TaskDaoTest {
     fun insertarTarea() = runTest {
         val tarea = TaskEntity(title = "Comprar pan")
         dao.insert(tarea)
-        val tareas = dao.getAllTasks().first()
+        val tareas = dao.getAllTasksNewestFirst().first()
         assertEquals(1, tareas.size)
         assertEquals("Comprar pan", tareas[0].title)
     }
@@ -45,19 +45,19 @@ class TaskDaoTest {
     @Test
     fun actualizarTarea() = runTest {
         dao.insert(TaskEntity(title = "Estudiar"))
-        val original = dao.getAllTasks().first().first()
+        val original = dao.getAllTasksNewestFirst().first().first()
         assertEquals(false, original.isCompleted)
         dao.update(original.copy(isCompleted = true))
-        val actualizada = dao.getAllTasks().first().first()
+        val actualizada = dao.getAllTasksNewestFirst().first().first()
         assertTrue(actualizada.isCompleted)
     }
 
     @Test
     fun borrarTarea() = runTest {
         dao.insert(TaskEntity(title = "Algo"))
-        val tarea = dao.getAllTasks().first().first()
+        val tarea = dao.getAllTasksNewestFirst().first().first()
         dao.delete(tarea)
-        val tareas = dao.getAllTasks().first()
+        val tareas = dao.getAllTasksNewestFirst().first()
         assertTrue(tareas.isEmpty())
     }
 }
